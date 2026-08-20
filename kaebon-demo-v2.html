@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>แก้บน · The Vow Collector · v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chonburi&family=IBM+Plex+Sans+Thai:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#0a0c0a; --lacquer:#13100c; --ash:#1d1a15;
+  --gold:#c9a227; --gold-dim:#8a6f1c; --blood:#a3231d;
+  --paper:#e6dcc2; --paper-dim:#b6ab8e; --smoke:#77877c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--night);color:var(--paper);font-family:"IBM Plex Sans Thai",system-ui,sans-serif;
+  font-weight:300;line-height:1.75;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:90;
+  background:radial-gradient(ellipse at 50% 42%,transparent 8%,rgba(0,0,0,.55) 62%,rgba(0,0,0,.92) 100%)}
+body::after{content:"";position:fixed;inset:-50%;pointer-events:none;z-index:91;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain 700ms steps(3) infinite}
+@keyframes grain{0%{transform:translate(0,0)}33%{transform:translate(-3%,2%)}66%{transform:translate(2%,-3%)}100%{transform:translate(0,0)}}
+@media (prefers-reduced-motion:reduce){body::after{animation:none}*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+
+.wrap{max-width:1080px;margin:0 auto;padding:18px 18px 70px;position:relative;z-index:2}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  border-bottom:1px solid rgba(201,162,39,.22);padding-bottom:10px;margin-bottom:20px;flex-wrap:wrap}
+.mark{font-family:"Chonburi",serif;font-size:18px;color:var(--gold);letter-spacing:.5px}
+.mark small{font-family:"IBM Plex Mono",monospace;font-size:9.5px;color:var(--gold-dim);letter-spacing:2px;display:block;font-weight:400}
+.meters{display:flex;gap:16px;align-items:center;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--paper-dim);flex-wrap:wrap}
+.meters b{color:var(--paper);font-weight:500}
+#m-clock b{letter-spacing:1px}
+#m-clock.late b{color:#e8a33c}
+#m-clock.crit b{color:#d9483f}
+.langbtn,.tool{background:none;border:1px solid rgba(201,162,39,.35);color:var(--gold);
+  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:1px;padding:5px 11px;cursor:pointer;border-radius:2px}
+.langbtn:hover,.tool:hover{background:rgba(201,162,39,.1)}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+button{font-family:inherit}
+
+.scene{display:none;animation:fade .7s ease both}
+.scene.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h1{font-family:"Chonburi",serif;font-weight:400;line-height:1.3}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold-dim)}
+.sec-title{font-family:"Chonburi",serif;font-size:23px;color:var(--paper);margin:6px 0 4px}
+.lede{color:var(--paper-dim);font-size:14.5px;max-width:660px}
+.center{text-align:center}
+.err{color:#d9483f;font-size:13px;min-height:1.4em;margin-top:10px}
+.foot{margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.act{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:11px 24px;font-size:14px;
+  letter-spacing:.5px;cursor:pointer;border-radius:2px;transition:background .2s}
+.act:hover{background:rgba(201,162,39,.12)}
+.act.solid{background:var(--gold);color:#1a1508;font-weight:500}
+.act.solid:hover{background:#e0b52e}
+.act.ghost{border-color:rgba(230,220,194,.28);color:var(--paper-dim)}
+.act:disabled{opacity:.28;cursor:not-allowed}
+.note{background:rgba(201,162,39,.06);border-left:2px solid var(--gold-dim);padding:12px 16px;margin-top:18px;
+  font-size:13.5px;color:var(--paper-dim);line-height:1.85}
+.note strong{color:var(--gold);font-weight:500}
+
+/* title */
+#title{text-align:center;padding:7vh 0 5vh}
+#title h1{font-size:clamp(42px,9vw,84px);color:var(--paper);letter-spacing:2px}
+#title .sub{font-family:"Chonburi",serif;font-size:clamp(14px,2.4vw,20px);color:var(--gold);letter-spacing:6px;margin-top:6px}
+.censer{width:1px;height:84px;margin:30px auto 24px;background:linear-gradient(to top,var(--blood),#e8703a 68%,#ffd08a);position:relative}
+.censer::after{content:"";position:absolute;top:-5px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;
+  background:#ffcf82;box-shadow:0 0 12px 4px rgba(255,150,50,.75);animation:ember 2.6s ease-in-out infinite}
+@keyframes ember{0%,100%{opacity:.55}50%{opacity:1}}
+.tagline{max-width:540px;margin:0 auto;color:var(--paper-dim);font-size:15px}
+
+/* slip */
+.slip{background:var(--paper);color:#2a2418;padding:28px 28px 24px;border-radius:2px;max-width:620px;
+  box-shadow:0 22px 60px rgba(0,0,0,.75);position:relative;
+  background-image:radial-gradient(circle at 12% 8%,rgba(160,130,70,.15) 0,transparent 42%),radial-gradient(circle at 88% 92%,rgba(160,130,70,.13) 0,transparent 40%)}
+.slip .stamp{position:absolute;top:14px;right:18px;font-family:"IBM Plex Mono",monospace;font-size:10px;
+  letter-spacing:2px;color:#9a2b22;border:1px solid #9a2b22;padding:3px 7px;transform:rotate(4deg);opacity:.8}
+.slip h2{font-family:"Chonburi",serif;font-weight:400;font-size:21px;margin-bottom:2px;color:#1d1a12}
+.slip .where{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:1px;color:#6d6349;margin-bottom:16px}
+.slip .body{font-size:15.5px;line-height:2;color:#3a3325;border-left:2px solid rgba(150,40,30,.35);padding-left:16px}
+.slip .sign{margin-top:16px;font-size:13px;color:#6d6349;text-align:right;font-style:italic}
+.slip .terms{margin-top:18px;padding-top:13px;border-top:1px dashed rgba(80,70,45,.35);display:flex;
+  justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:12px;color:#5c5340;gap:12px;flex-wrap:wrap}
+
+/* cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:10px;margin-top:16px}
+.card{background:var(--ash);border:1px solid rgba(230,220,194,.11);border-radius:2px;padding:12px;cursor:pointer;
+  text-align:left;color:var(--paper);transition:border-color .2s,background .2s;width:100%}
+.card:hover{border-color:rgba(201,162,39,.5)}
+.card.picked{border-color:var(--gold);background:rgba(201,162,39,.09)}
+.card .nm{font-size:14.5px;margin-bottom:3px}
+.card .pr{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--paper-dim)}
+.card.picked .pr{color:var(--gold)}
+.card .hint{font-size:11.5px;color:var(--smoke);margin-top:6px;line-height:1.5}
+.budget{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--gold);margin-top:14px}
+.budget.over{color:#d9483f}
+
+/* altar */
+.altar{background:linear-gradient(180deg,#0d0f0d 0%,var(--lacquer) 100%);border:1px solid rgba(201,162,39,.16);
+  border-radius:2px;padding:24px 20px;text-align:center;position:relative;overflow:hidden}
+.shrine{width:150px;height:104px;margin:0 auto 6px;position:relative}
+.shrine .roof{position:absolute;top:0;left:50%;transform:translateX(-50%);width:0;height:0;
+  border-left:75px solid transparent;border-right:75px solid transparent;border-bottom:34px solid #2a2118}
+.shrine .base{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:96px;height:70px;background:#1c1611;border:1px solid rgba(201,162,39,.25)}
+.shrine .door{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:34px;height:46px;background:#080907;box-shadow:inset 0 0 16px rgba(0,0,0,.9)}
+.shrine .glow{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:60px;height:34px;
+  background:radial-gradient(ellipse,rgba(255,150,60,.3),transparent 70%);animation:ember 3.4s ease-in-out infinite}
+.clues{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:9px;margin:14px auto 0;max-width:660px}
+.clue{background:rgba(230,220,194,.04);border:1px solid rgba(230,220,194,.13);border-radius:2px;padding:11px 13px;
+  text-align:left;color:var(--paper-dim);cursor:pointer;font-size:13px;transition:border-color .2s}
+.clue:hover{border-color:rgba(201,162,39,.45);color:var(--paper)}
+.clue .cost{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--gold-dim);display:block;margin-top:3px}
+.clue.done{cursor:default;border-color:rgba(201,162,39,.3);color:var(--paper);background:rgba(201,162,39,.05)}
+.clue.done .cost{color:var(--smoke)}
+.tray{min-height:54px;display:flex;flex-wrap:wrap;gap:7px;justify-content:center;padding:11px;margin:14px auto 0;
+  max-width:540px;border:1px dashed rgba(230,220,194,.16);border-radius:2px}
+.tray .empty{color:var(--smoke);font-size:13px}
+.chip{background:rgba(201,162,39,.13);border:1px solid rgba(201,162,39,.4);color:var(--gold);padding:5px 12px;border-radius:2px;font-size:13px}
+.sticks{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.stick{background:transparent;border:1px solid rgba(230,220,194,.22);color:var(--paper-dim);width:56px;padding:9px 0;
+  cursor:pointer;border-radius:2px;font-family:"IBM Plex Mono",monospace;font-size:14px}
+.stick:hover{border-color:rgba(201,162,39,.55);color:var(--paper)}
+.stick.on{border-color:var(--gold);background:rgba(201,162,39,.16);color:var(--gold)}
+
+/* ritual */
+#ritual{text-align:center;padding:5vh 0}
+.burner{width:200px;height:230px;margin:0 auto;position:relative}
+.incense{position:absolute;bottom:44px;left:50%;width:2px;background:#3f342a;transform-origin:bottom}
+.tip{position:absolute;top:-3px;left:-1.5px;width:5px;height:5px;border-radius:50%;background:#ff9c3c;box-shadow:0 0 10px 3px rgba(255,120,40,.7)}
+.pot{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:84px;height:46px;background:#241d16;
+  border:1px solid rgba(201,162,39,.3);border-radius:4px 4px 12px 12px}
+.puff{position:absolute;bottom:120px;left:50%;width:26px;height:26px;border-radius:50%;background:rgba(160,175,165,.16);filter:blur(9px)}
+@keyframes rise{0%{transform:translate(-50%,0) scale(.4);opacity:0}18%{opacity:.75}100%{transform:translate(calc(-50% + var(--dx,14px)),-130px) scale(2.6);opacity:0}}
+@keyframes sink{0%{transform:translate(-50%,0) scale(.5);opacity:0}18%{opacity:.8}100%{transform:translate(calc(-50% + var(--dx,10px)),120px) scale(3);opacity:0}}
+.ritual-line{font-family:"Chonburi",serif;font-size:clamp(16px,3vw,22px);color:var(--paper);min-height:2.7em;
+  margin-top:24px;max-width:580px;margin-inline:auto;line-height:1.6}
+.ritual-line.warn{color:#e8a33c}.ritual-line.bad{color:#d9483f}.ritual-line.good{color:#8fc4a4}
+
+/* photo */
+.photo{background:#0d0f0e;border:10px solid #efe8d4;border-bottom-width:34px;box-shadow:0 18px 50px rgba(0,0,0,.8);
+  max-width:440px;margin:0 auto;position:relative}
+.photo svg{display:block;width:100%;height:auto}
+.photo .cap{position:absolute;bottom:-27px;left:0;right:0;text-align:center;font-family:"IBM Plex Mono",monospace;
+  font-size:11px;color:#4a4335;letter-spacing:1px}
+.shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:16px}
+.shot{cursor:pointer;background:#0d0f0e;border:6px solid #efe8d4;border-bottom-width:22px;position:relative;padding:0}
+.shot svg{display:block;width:100%;height:auto}
+.shot .cap{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:9.5px;color:#4a4335}
+.shot.new{outline:1px solid var(--gold);outline-offset:3px}
+
+/* letter under the door */
+.letter{background:#ded4bb;color:#241f16;max-width:560px;margin:0 auto;padding:26px 26px 22px;border-radius:1px;
+  box-shadow:0 16px 44px rgba(0,0,0,.7);font-family:"Chonburi",serif;font-size:16.5px;line-height:2;
+  background-image:repeating-linear-gradient(180deg,transparent 0 31px,rgba(90,80,55,.11) 31px 32px)}
+.letter .from{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:2px;color:#7a6f52;margin-bottom:14px;display:block}
+
+/* book / notebook */
+.book{background:var(--ash);border:1px solid rgba(230,220,194,.1);padding:16px 18px;border-radius:2px;margin-top:18px}
+.book h3{font-family:"Chonburi",serif;font-weight:400;font-size:16px;color:var(--gold);margin-bottom:8px}
+.book ul{list-style:none;font-size:13.5px;color:var(--paper-dim)}
+.book li{padding:3px 0;border-bottom:1px solid rgba(230,220,194,.06);display:flex;justify-content:space-between;gap:14px}
+.book li span:first-child{font-family:"IBM Plex Mono",monospace;color:var(--gold-dim);min-width:52px}
+.book .mine{font-size:13.5px;color:var(--paper-dim);padding:4px 0;border-bottom:1px solid rgba(230,220,194,.06)}
+.book .mine::before{content:"— ";color:var(--gold-dim)}
+.diary{font-family:"Chonburi",serif;font-size:15.5px;line-height:2;color:var(--paper);
+  background:rgba(230,220,194,.045);border-left:2px solid var(--gold-dim);padding:16px 20px;margin-top:14px;max-width:660px}
+.diary .meta{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:2px;color:var(--gold-dim);display:block;margin-bottom:8px}
+.opts{display:flex;flex-direction:column;gap:9px;margin-top:14px;max-width:660px}
+.opt{background:var(--ash);border:1px solid rgba(230,220,194,.12);color:var(--paper);text-align:left;
+  padding:12px 15px;border-radius:2px;cursor:pointer;font-size:14px}
+.opt:hover{border-color:rgba(201,162,39,.5)}
+.ledger{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--paper-dim);
+  border-top:1px solid rgba(230,220,194,.15);border-bottom:1px solid rgba(230,220,194,.15);
+  padding:13px 0;margin:20px 0;display:flex;justify-content:space-around;gap:14px;flex-wrap:wrap}
+.ledger b{display:block;color:var(--paper);font-size:17px;font-weight:500;margin-top:3px}
+.grade{font-family:"Chonburi",serif;font-size:clamp(24px,5vw,36px);margin-bottom:8px}
+.g-perfect{color:#8fc4a4}.g-partial{color:#d9b45c}.g-wrong{color:#e8a33c}.g-void{color:#d9483f}
+.narrow{max-width:660px;margin-inline:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="mark" id="mark">แก้บน<small>THE VOW COLLECTOR · DEMO v2</small></div>
+    <div class="meters">
+      <span id="m-clock"></span>
+      <span id="m-money"></span>
+      <span id="m-job"></span>
+      <button class="tool" id="btn-book"></button>
+      <button class="langbtn" id="lang">EN</button>
+    </div>
+  </div>
+
+  <section class="scene on" id="title">
+    <div class="eyebrow" id="t-eyebrow"></div>
+    <h1 id="t-title"></h1>
+    <div class="sub" id="t-sub"></div>
+    <div class="censer"></div>
+    <p class="tagline" id="t-tag"></p>
+    <div class="foot"><button class="act solid" id="t-start"></button></div>
+    <div class="note narrow" style="text-align:left" id="t-note"></div>
+  </section>
+
+  <section class="scene" id="diary">
+    <div class="eyebrow" id="d-eyebrow"></div>
+    <h1 class="sec-title" id="d-head"></h1>
+    <p class="lede" id="d-lede"></p>
+    <div class="diary" id="d-body"></div>
+    <div class="foot" style="justify-content:flex-start"><button class="act" id="d-next"></button></div>
+  </section>
+
+  <section class="scene" id="brief">
+    <div class="eyebrow" id="b-eyebrow"></div>
+    <h1 class="sec-title" id="b-head"></h1>
+    <p class="lede" id="b-lede"></p>
+    <div class="slip" style="margin-top:18px">
+      <div class="stamp" id="b-stamp"></div>
+      <h2 id="b-place"></h2>
+      <div class="where" id="b-where"></div>
+      <div class="body" id="b-body"></div>
+      <div class="sign" id="b-sign"></div>
+      <div class="terms"><span id="b-budget"></span><span id="b-fee"></span></div>
+    </div>
+    <div class="foot" style="justify-content:flex-start"><button class="act" id="b-next"></button></div>
+  </section>
+
+  <section class="scene" id="shop">
+    <div class="eyebrow" id="s-eyebrow"></div>
+    <h1 class="sec-title" id="s-head"></h1>
+    <p class="lede" id="s-lede"></p>
+    <div class="grid" id="s-grid"></div>
+    <div class="budget" id="s-budget"></div>
+    <div class="err" id="s-err"></div>
+    <div class="foot" style="justify-content:flex-start">
+      <button class="act ghost" id="s-back"></button>
+      <button class="act solid" id="s-next"></button>
+    </div>
+  </section>
+
+  <section class="scene" id="altar">
+    <div class="eyebrow" id="a-eyebrow"></div>
+    <h1 class="sec-title" id="a-head"></h1>
+    <p class="lede" id="a-lede"></p>
+    <div class="altar" style="margin-top:16px">
+      <div class="shrine"><div class="roof"></div><div class="base"></div><div class="door"></div><div class="glow"></div></div>
+      <div class="eyebrow" id="a-clue-l" style="margin-top:14px"></div>
+      <div class="clues" id="a-clues"></div>
+      <div class="eyebrow" id="a-tray-l" style="margin-top:20px"></div>
+      <div class="tray" id="a-tray"></div>
+      <div class="eyebrow" id="a-stick-l" style="margin-top:18px"></div>
+      <div class="sticks" id="a-sticks"></div>
+    </div>
+    <div class="err center" id="a-err"></div>
+    <div class="foot">
+      <button class="act ghost" id="a-shop"></button>
+      <button class="act solid" id="a-go"></button>
+    </div>
+  </section>
+
+  <section class="scene" id="ritual">
+    <div class="burner" id="r-burner"><div class="pot"></div></div>
+    <div class="ritual-line" id="r-line"></div>
+  </section>
+
+  <section class="scene" id="camera">
+    <div class="narrow center">
+      <div class="eyebrow" id="cm-eyebrow"></div>
+      <h1 class="sec-title" id="cm-head"></h1>
+      <p class="lede" style="margin-inline:auto" id="cm-text"></p>
+      <div class="foot"><button class="act solid" id="cm-go"></button></div>
+    </div>
+  </section>
+
+  <section class="scene" id="room">
+    <div class="narrow">
+      <div class="eyebrow center" id="rm-eyebrow"></div>
+      <h1 class="sec-title center" id="rm-head"></h1>
+      <div id="rm-photo" style="margin-top:22px"></div>
+      <p class="lede center" style="margin:34px auto 0" id="rm-read"></p>
+      <div class="foot"><button class="act" id="rm-letter"></button></div>
+    </div>
+  </section>
+
+  <section class="scene" id="reply">
+    <div class="narrow">
+      <div class="eyebrow center" id="rp-eyebrow"></div>
+      <h1 class="sec-title center" id="rp-head"></h1>
+      <div class="letter" style="margin-top:20px"><span class="from" id="rp-from"></span><span id="rp-body"></span></div>
+      <div class="ledger" id="rp-ledger"></div>
+      <div class="foot"><button class="act solid" id="rp-next"></button></div>
+    </div>
+  </section>
+
+  <section class="scene" id="write">
+    <div class="narrow">
+      <div class="eyebrow" id="w-eyebrow"></div>
+      <h1 class="sec-title" id="w-head"></h1>
+      <p class="lede" id="w-lede"></p>
+      <div class="opts" id="w-opts"></div>
+    </div>
+  </section>
+
+  <section class="scene" id="drawer">
+    <div class="narrow">
+      <div class="eyebrow center" id="dr-eyebrow"></div>
+      <h1 class="sec-title center" id="dr-head"></h1>
+      <p class="lede center" style="margin-inline:auto" id="dr-text"></p>
+      <div class="shots" id="dr-shots"></div>
+      <div class="foot"><button class="act solid" id="dr-next"></button></div>
+    </div>
+  </section>
+
+  <section class="scene" id="choice">
+    <div class="narrow center">
+      <div class="eyebrow" id="c-eyebrow"></div>
+      <h1 class="sec-title" id="c-head"></h1>
+      <p class="lede" style="margin-inline:auto" id="c-text"></p>
+      <div class="foot" style="flex-direction:column;align-items:center;gap:10px;margin-top:24px">
+        <button class="act" id="c-a" style="min-width:320px"></button>
+        <button class="act" id="c-b" style="min-width:320px"></button>
+        <button class="act ghost" id="c-c" style="min-width:320px"></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene" id="ending">
+    <div class="narrow center">
+      <div class="eyebrow" id="e-eyebrow"></div>
+      <h1 class="sec-title" id="e-head" style="font-size:29px"></h1>
+      <p class="lede" style="margin-inline:auto;margin-top:12px" id="e-text"></p>
+      <div class="ledger" id="e-ledger"></div>
+      <div class="note" style="text-align:left" id="e-note"></div>
+      <div class="foot"><button class="act" id="e-again"></button></div>
+    </div>
+  </section>
+
+  <section class="scene" id="handbook">
+    <div class="narrow">
+      <div class="eyebrow" id="h-eyebrow"></div>
+      <h1 class="sec-title" id="h-head"></h1>
+      <div class="book"><h3 id="h-t1"></h3><ul id="h-list"></ul></div>
+      <div class="book"><h3 id="h-t2"></h3><div id="h-mine"></div></div>
+      <div class="book"><h3 id="h-t3"></h3><div id="h-diary" style="font-size:13.5px;color:var(--paper-dim);line-height:1.9"></div></div>
+      <div class="foot"><button class="act" id="h-back"></button></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+"use strict";
+var L="th";
+function $(i){return document.getElementById(i)}
+function money(n){return n.toLocaleString("en-US")}
+function f(o,k){var kk=k?k+"_"+L:L;return o[kk]!==undefined?o[kk]:o[k]}
+
+/* ================= DATA ================= */
+
+var ITEMS=[
+ {id:"pighead",price:250,tags:["meat4","savory"],th:"หัวหมู",en:"Pig head",th_h:"ของหนักที่สุด ใช้กับพิธีใหญ่",en_h:"The heaviest offering. Major rites only."},
+ {id:"chicken",price:120,tags:["meat_bird","savory"],th:"ไก่ต้มทั้งตัว",en:"Whole boiled chicken",th_h:"ของคาวมาตรฐาน",en_h:"The standard savoury offering."},
+ {id:"redfanta",price:20,tags:["red","sweet"],th:"น้ำแดง",en:"Red syrup drink",th_h:"หวาน สีแดง",en_h:"Sweet. Red."},
+ {id:"khanom",price:40,tags:["red","sweet"],th:"ขนมชั้นสีแดง",en:"Red layered sweet",th_h:"ขนมมงคล เนื้อหวาน",en_h:"An auspicious sweet."},
+ {id:"garland",price:50,tags:["flower"],th:"พวงมาลัยดาวเรือง",en:"Marigold garland",th_h:"ใช้ได้กับแทบทุกศาล",en_h:"Fits almost any shrine."},
+ {id:"whitefl",price:45,tags:["flower","white"],th:"ดอกไม้ขาว",en:"White flowers",th_h:"ใช้กับผู้ล่วงลับและครูบาอาจารย์",en_h:"For the dead, and for teachers."},
+ {id:"fruit",price:80,tags:["fruit"],th:"ผลไม้มงคล 5 อย่าง",en:"Five auspicious fruits",th_h:"กลาง ๆ ไม่ผิดแต่ไม่เด่น",en_h:"Safe. Never remarkable."},
+ {id:"lao",price:70,tags:["liquor"],th:"เหล้าขาว",en:"White liquor",th_h:"บางท่านดื่ม บางท่านเลิกแล้ว",en_h:"Some drink. Some have quit."},
+ {id:"cig",price:30,tags:["tobacco"],th:"บุหรี่มวนใบตอง",en:"Hand-rolled cigarettes",th_h:"ของคนรุ่นเก่า",en_h:"An old generation's habit."},
+ {id:"firecr",price:60,tags:["noise"],th:"ประทัด",en:"Firecrackers",th_h:"เสียงดัง ปลุกทุกอย่างในรัศมี",en_h:"Loud. Wakes everything nearby."},
+ {id:"candle",price:25,tags:["candle"],th:"เทียนขี้ผึ้ง",en:"Beeswax candles",th_h:"ใช้คู่กับธูปเสมอ",en_h:"Always paired with incense."},
+ {id:"likay",price:300,tags:["show"],th:"ละครรำแก้บน",en:"Hired dance troupe",th_h:"แพงมาก ใช้เมื่อบนไว้เท่านั้น",en_h:"Expensive. Only if it was vowed."}
+];
+
+var JOBS=[
+{
+ budget:500,fee:1500,incense:9,
+ stamp_th:"งานที่ 1",stamp_en:"JOB 01",
+ place_th:"ศาลพระภูมิ ท้ายซอยจรัญฯ 42",place_en:"Spirit house, end of Charan Soi 42",
+ where_th:"เดินเข้าซอย 300 เมตร · ไฟทางเสียมาสองปี",where_en:"300 m up the lane · street lamp dead for two years",
+ body_th:"ลูกบนไว้ตอนลูกชายป่วยหนัก ว่าถ้าหายจะถวายของที่ท่านชอบให้ครบ และไหว้ให้ถูกอย่าง ตอนนี้ลูกย้ายไปอยู่ต่างประเทศแล้ว รบกวนไปแทนที<br><br>ท่านชอบของหวานสีแดง และท่านไม่รับเนื้อสี่เท้า",
+ body_en:"I made this vow when my son was gravely ill — that if he recovered I would offer everything he favours, done properly. I have since moved abroad. Please go in my place.<br><br>He favours red sweets. He does not accept four-legged meat.",
+ sign_th:"— คุณสมพร · 14 มีนาคม",sign_en:"— Somporn · 14 March",
+ why_th:"ศาลพระภูมิคือเจ้าที่ ซึ่งนับเป็นเทวดา",why_en:"A spirit house holds a guardian of the land — a deity.",
+ require:[{tag:"red",th:"ของหวานสีแดง",en:"a red sweet"}],
+ forbid:[{tag:"meat4",th:"เนื้อสี่เท้า",en:"four-legged meat"}],
+ clues:[
+  {th:"ส่องป้ายหน้าศาล",en:"Read the plaque",
+   r_th:"ป้ายทองเขียนว่า พระภูมิเจ้าที่ ประดิษฐาน พ.ศ. 2531 — เป็นเทวดารักษาแผ่นดิน ไม่ใช่ผีบ้านผีเรือน",
+   r_en:"The gilt plaque names a guardian deity of the land, enshrined in 1988 — not a household ghost."},
+  {th:"นับรูธูปในกระถาง",en:"Count the holes in the burner",
+   r_th:"รูเก่าเรียงเป็นสามแถว แถวละสาม คนก่อนหน้าใช้เก้าดอกมาตลอด",
+   r_en:"Old holes sit in three rows of three. Whoever came before always used nine."},
+  {th:"ดูของเซ่นเก่าที่เหลืออยู่",en:"Look at the old offerings",
+   r_th:"ขวดน้ำแดงเปล่าเรียงกันสี่ขวด ไม่มีเศษกระดูกสัตว์เลยสักชิ้น",
+   r_en:"Four empty red-syrup bottles in a row. Not a single animal bone anywhere."}
+ ],
+ reply:{
+  perfect_th:"ครบแล้ว ทั้งที่แม่เจ้าบนไว้เมื่อหกปีก่อน ข้ารอของหวานนั่นมานาน กลับบ้านเถอะ อย่าหันหลังมามอง",
+  perfect_en:"It is complete. Six years I waited for that sweet. Go home now. Do not turn around.",
+  partial_th:"เจ้ามาถูกที่ ไหว้ถูกอย่าง แต่ของหวานสีแดงที่เขาบนไว้ล่ะ ข้าจำได้ทุกคำ คนที่บนก็ควรจำได้ ไปบอกเขาว่าข้ายังนับอยู่",
+  partial_en:"Right place. Right rites. But the red sweet he promised — I remember every word. So should he. Tell him I am still counting.",
+  wrong_th:"ข้าคือเจ้าที่ ธูปของข้ามีเก้าดอกเสมอ ที่เจ้าจุดมานั้นเรียกอย่างอื่นมาแทน ตอนนี้มันยืนอยู่หลังเจ้า และข้าจะไม่ไล่มันให้",
+  wrong_en:"I am the guardian here. My incense is nine, always. What you lit called something else instead. It is standing behind you now, and I will not drive it off for you.",
+  void_th:"เจ้าเอาเนื้อสี่เท้ามาวางต่อหน้าข้า ทั้งที่ในใบสั่งเขียนไว้ชัด ข้าไม่รับทั้งสำรับ หนี้ของสมพรตกเป็นของคนที่ยืนอยู่ตรงนี้แล้ว ซึ่งไม่ใช่สมพร",
+  void_en:"You set four-legged meat before me, and the slip said plainly. I refuse all of it. Somporn's debt now belongs to whoever stands here. That is not Somporn."
+ },
+ write:[
+  {th:"ศาลพระภูมิคือเทวดา ใช้ธูป 9 ดอก",en:"A spirit house holds a deity. Nine sticks.",ok:true,
+   note_th:"9 ดอก — เทวดา เจ้าที่ พระภูมิ",note_en:"9 — deities, guardians of the land"},
+  {th:"ทุกศาลใช้ธูป 9 ดอกไว้ก่อน ปลอดภัยที่สุด",en:"Use nine sticks at every shrine. Safest.",ok:false,
+   note_th:"9 ดอก — ใช้ได้กับทุกศาล (ลายมือคุณเอง)",note_en:"9 — works at any shrine (your own handwriting)"},
+  {th:"ของแพงกว่าทำให้ท่านพอใจมากกว่า",en:"Costlier offerings please them more.",ok:false,
+   note_th:"ซื้อของแพงไว้ก่อน ปลอดภัยกว่า (ลายมือคุณเอง)",note_en:"Buy the expensive thing. Safer. (your own handwriting)"}
+ ]
+},
+{
+ budget:400,fee:1200,incense:1,
+ stamp_th:"งานที่ 2",stamp_en:"JOB 02",
+ place_th:"ศาลตายาย ริมคลองบางเขน",place_en:"Ancestor shrine, Bang Khen canal",
+ where_th:"ตีสองเป็นต้นไป · ห้ามเรียกชื่อใครดัง ๆ",where_en:"After 2 a.m. · do not call anyone's name aloud",
+ body_th:"ตากับยายไม่ได้เป็นเทวดา เป็นคนที่ตายไปแล้ว อย่าไหว้ผิดที่<br><br>หนูบนไว้ว่าจะถวายอย่างที่ท่านเคยกินตอนมีชีวิต ตาชอบไก่กับเหล้าขาว ยายไม่ชอบเสียงดัง<br><br>หนูไปเองไม่ได้ หนูไม่กล้า",
+ body_en:"They are not deities. They are people who died. Do not address them wrongly.<br><br>My vow was to offer what they ate in life. Grandfather liked chicken and white liquor. Grandmother hated noise.<br><br>I cannot go myself. I am not brave enough.",
+ sign_th:"— หลานสาว · ไม่ลงชื่อ",sign_en:"— A granddaughter · unsigned",
+ why_th:"ผู้ล่วงลับรับธูป 1 ดอก ไม่ใช่ 9",why_en:"The dead take one stick. Not nine.",
+ require:[{tag:"meat_bird",th:"ไก่",en:"chicken"}],
+ forbid:[{tag:"liquor",th:"เหล้า",en:"liquor"},{tag:"noise",th:"ของที่มีเสียง",en:"anything that makes noise"}],
+ clues:[
+  {th:"ส่องรูปถ่ายในศาล",en:"Look at the photographs",
+   r_th:"รูปขาวดำสองใบ ชายกับหญิง ใต้รูปเขียนปีที่เสีย — ทั้งคู่เป็นคน ไม่ใช่เทวดา",
+   r_en:"Two black-and-white portraits, a man and a woman, with the years they died — people, not deities."},
+  {th:"ดูขวดที่วางอยู่ข้างศาล",en:"Examine the bottles beside the shrine",
+   r_th:"ขวดเหล้าขาวถูกวางคว่ำทุกขวด มีกระดาษเหน็บไว้ เขียนว่า เลิกแล้ว ปีสุดท้าย — ใบสั่งบอกว่าตาชอบเหล้า แต่ตรงนี้บอกอีกอย่าง",
+   r_en:"Every liquor bottle is placed upside down, with a slip of paper: quit — final year. The order slip says he loved liquor. This says otherwise."},
+  {th:"นับรูธูปในกระถาง",en:"Count the holes in the burner",
+   r_th:"มีรูเดียวตรงกลาง ลึกจนดำ ใช้ซ้ำที่เดิมมานับสิบปี",
+   r_en:"A single hole in the centre, burnt black. The same spot, reused for a decade."}
+ ],
+ reply:{
+  perfect_th:"หลานข้าเขียนว่าข้าชอบเหล้า มันจำข้าตอนที่ข้ายังกินเหล้า ข้าเลิกก่อนตายสองปี เจ้าเป็นคนแรกที่ดูก่อนแล้วค่อยวาง ข้าขอบใจ ยายเจ้าฝากบอกว่าคืนนี้เงียบดี",
+  perfect_en:"My granddaughter wrote that I loved liquor. She remembers the man I was before I stopped. I quit two years before I died. You are the first who looked before setting anything down. Her grandmother says the quiet tonight was good.",
+  partial_th:"ข้าอยู่ตรงนี้ ข้ารับที่เจ้าวาง แต่ไก่ที่หลานข้าบนไว้ไม่มี เจ้ามาไหว้คนตายด้วยของที่คนตายไม่ได้ขอ หนี้ยังค้างครึ่งหนึ่ง และหลานข้ายังไม่กล้ามาเอง",
+  partial_en:"I am here. I take what you set down. But the chicken she promised is missing. You came to the dead with something the dead never asked for. Half the debt remains, and she still will not come herself.",
+  wrong_th:"ธูปที่เจ้าจุดเรียกเทวดา ข้าตายมาสี่สิบปี ยังไม่ได้เป็นเทวดาสักที ที่มารับไปแทนข้านั้นข้าไม่รู้จัก ตอนนี้มันนั่งรออยู่ที่โต๊ะของเจ้า ที่เก้าอี้ตัวที่เจ้าไม่เคยใช้",
+  wrong_en:"What you lit calls deities. I have been dead forty years and I am still not one. Whatever took it in my place, I do not know. It is sitting at your table now, in the chair you never use.",
+  void_th:"เจ้าเชื่อกระดาษมากกว่าเชื่อตาตัวเอง ขวดคว่ำอยู่ตรงนั้นทุกใบ เจ้ายังเอามาวางอีก ยายเจ้าตกใจเสียงนั้น และข้าโกรธ ไปได้แล้ว อย่ากลับมาที่นี่อีก",
+  void_en:"You believed paper over your own eyes. Every bottle there is upturned, and still you set one down. You frightened her. I am angry. Leave, and do not come back here."
+ },
+ write:[
+  {th:"ใบสั่งโกหกได้ ต้องเชื่อหลักฐานที่ศาล",en:"Slips can lie. Trust the evidence at the shrine.",ok:true,
+   note_th:"ตรวจศาลก่อนเสมอ กระดาษเชื่อไม่ได้ทั้งหมด",note_en:"Always search the shrine. Paper is not the whole truth."},
+  {th:"ลูกค้ารู้จักคนของตัวเองดีที่สุด ทำตามใบสั่ง",en:"Clients know their own dead best. Follow the slip.",ok:false,
+   note_th:"ทำตามใบสั่งเป๊ะ ๆ ไม่ต้องคิดเอง (ลายมือคุณเอง)",note_en:"Follow the slip exactly. Do not improvise. (your own handwriting)"},
+  {th:"ผู้ล่วงลับรับธูปดอกเดียว",en:"The dead receive one stick.",ok:true,
+   note_th:"1 ดอก — ผู้ล่วงลับ วิญญาณเร่ร่อน",note_en:"1 — the dead, wandering spirits"}
+ ]
+},
+{
+ budget:450,fee:1800,incense:5,
+ stamp_th:"งานที่ 3",stamp_en:"JOB 03",
+ place_th:"ศาลไม่มีชื่อ หลังตลาดเก่า",place_en:"An unnamed shrine behind the old market",
+ where_th:"ไม่มีคนส่งใบสั่ง · พบวางอยู่หน้าห้องคุณ",where_en:"No courier · found outside your room",
+ body_th:"บนไว้ตอนอายุสิบเอ็ด ว่าถ้ารอดจากคืนนั้นจะกลับมาถวายดอกไม้ขาวกับเทียน แล้วจะจำไว้ตลอดชีวิต<br><br>ไม่ต้องมีของคาว ท่านไม่ใช่เจ้าที่และไม่ใช่ตายาย ท่านเป็นครู<br><br>ลายมือในใบสั่งนี้เหมือนลายมือคุณทุกตัวอักษร",
+ body_en:"A vow made at eleven years old — that if I survived that night I would return with white flowers and candles, and remember for the rest of my life.<br><br>No savoury food. Not a guardian, not an ancestor. A teacher.<br><br>The handwriting on this slip matches yours, letter for letter.",
+ sign_th:"— ไม่ลงชื่อ",sign_en:"— unsigned",
+ why_th:"ครูบาอาจารย์รับธูป 5 ดอก",why_en:"Teachers and masters receive five sticks.",
+ require:[{tag:"white",th:"ดอกไม้ขาว",en:"white flowers"},{tag:"candle",th:"เทียน",en:"candles"}],
+ forbid:[{tag:"savory",th:"ของคาว",en:"savoury food"}],
+ clues:[
+  {th:"ส่องพื้นรอบศาล",en:"Search the ground",
+   r_th:"ขี้เถ้าเก่าหนาเป็นชั้น เป็นเถ้าไม้ ไม่ใช่เถ้าธูป ตรงนี้เคยไหม้ทั้งบริเวณ",
+   r_en:"Layers of old ash — wood ash, not incense. Everything here burned once."},
+  {th:"อ่านรอยสลักที่ฐานศาล",en:"Read the carving on the base",
+   r_th:"สลักด้วยของแหลม ลายมือเด็ก เขียนว่า ครูพาหนูออกมา หนูจะกลับมา — ลงวันที่ยี่สิบปีก่อน",
+   r_en:"Scratched with something sharp, in a child's hand: teacher brought me out, i will come back — dated twenty years ago."},
+  {th:"นับรูธูปในกระถาง",en:"Count the holes in the burner",
+   r_th:"ห้ารู เรียงเป็นแถวเดียว ไม่มีใครมาจุดซ้ำเลยตั้งแต่วันนั้น",
+   r_en:"Five holes in a single row. No one has lit here since."}
+ ],
+ reply:{
+  perfect_th:"เจ้าโตขึ้นมาก คืนนั้นข้าพาเด็กออกมาได้คนเดียว แล้วเด็กคนนั้นก็ลืมข้าไปยี่สิบปี ข้าไม่เคยโกรธ ข้าแค่รอ ทีนี้เจ้าจำได้แล้ว กลับบ้านได้",
+  perfect_en:"You have grown. That night I brought one child out, and that child forgot me for twenty years. I was never angry. I only waited. Now you remember. You may go home.",
+  partial_th:"เจ้ามาแล้ว แต่มาไม่ครบอย่างที่เด็กคนนั้นสัญญาไว้ ข้ารับเจ้าไว้ครึ่งเดียว เหมือนที่เจ้าจำข้าได้ครึ่งเดียว",
+  partial_en:"You came. Not with everything that child promised. I accept half of you, the way you remember half of me.",
+  wrong_th:"เจ้านับผิด ข้าไม่ใช่เทวดา ไม่ใช่คนในบ้านเจ้า ข้าเป็นครู ธูปห้าดอกเท่านั้น สิ่งที่เจ้าเรียกมาคืนนี้ ข้ากันมันออกจากเจ้าไม่ได้อีกแล้ว",
+  wrong_en:"You counted wrong. Not a deity, not your family. A teacher. Five sticks, only five. What you called tonight, I can no longer keep away from you.",
+  void_th:"ยี่สิบปี เจ้ากลับมาพร้อมของคาว ที่นี่ไม่เคยขอของกิน ข้าขอแค่ให้เจ้าจำ เจ้ายังจำไม่ได้ ไปเถอะ ข้าจะรอต่อ ข้ารอเป็นอยู่แล้ว",
+  void_en:"Twenty years, and you return with meat. This place never asked to be fed. It asked to be remembered. You still do not. Go. I will keep waiting. Waiting is what I do."
+ },
+ write:[
+  {th:"คำบนของคนอื่นกับของเราเอง ราคาเท่ากัน",en:"Another's vow and your own cost the same.",ok:true,
+   note_th:"หนี้ไม่สนใจว่าใครเป็นคนบน มันสนใจว่าใครมายืนตรงนั้น",note_en:"The debt does not care who vowed. It cares who is standing there."},
+  {th:"ถ้าลืมได้นานพอ คำบนจะหมดอายุไปเอง",en:"Forget it long enough and a vow expires.",ok:false,
+   note_th:"ลืมไปเถอะ เดี๋ยวมันก็หมดอายุ (ลายมือคุณเอง)",note_en:"Just forget it. It expires. (your own handwriting)"},
+  {th:"ครูบาอาจารย์รับธูป 5 ดอก",en:"Teachers receive five sticks.",ok:true,
+   note_th:"5 ดอก — ครูบาอาจารย์",note_en:"5 — teachers and masters"}
+ ]
+}];
+
+var DIARY=[
+{th:"<span class='meta'>สมุดของคนที่ทำงานนี้ก่อนคุณ · หน้า 3</span>ถ้าเจ้าอ่านถึงตรงนี้ แปลว่าเขาส่งงานให้เจ้าแล้ว<br><br>ข้าจดไว้ให้หมดเท่าที่รู้ ธูปหนึ่งดอกให้คนตาย สามให้พระ ห้าให้ครู เก้าให้เจ้าที่ จำไว้แค่นี้ก็รอดไปได้หลายคืน<br><br>ข้อสองที่สำคัญกว่า อย่าเชื่อใบสั่งร้อยเปอร์เซ็นต์ คนที่บนไว้มักจำผิด หรือไม่ก็โกหกตัวเอง ไปถึงศาลแล้วส่องดูให้ทั่วก่อนเสมอ ศาลไม่เคยโกหก",
+ en:"<span class='meta'>Notebook of the one who did this work before you · page 3</span>If you are reading this, he has given you the work.<br><br>I wrote down everything I know. One stick for the dead, three for the monks, five for teachers, nine for the guardian of the land. That alone will carry you through many nights.<br><br>The second rule matters more. Never trust a slip completely. People misremember their own vows, or lie to themselves about them. Search the shrine first, always. Shrines do not lie."},
+{th:"<span class='meta'>หน้า 17 · ลายมือเริ่มสั่น</span>คืนนี้ข้าทำพลาดที่ศาลริมคลอง ข้าไม่ได้บอกใคร<br><br>รูปที่ถ่ายมามีคนยืนอยู่ในกรอบ ข้าไม่ได้เปิดดูอีกเลยตั้งแต่คืนนั้น แต่ข้ารู้ว่ามันยังอยู่ในลิ้นชัก<br><br>เขาบอกว่าไม่เป็นไร ทำงานต่อไปเดี๋ยวก็ลืม ข้าเชื่อเขามาสามปีแล้ว",
+ en:"<span class='meta'>Page 17 · the handwriting begins to shake</span>I made a mistake at the canal shrine tonight. I told no one.<br><br>There is a figure standing in the photograph. I have not opened it since. I know it is still in the drawer.<br><br>He says it is fine, keep working, you will forget. I have believed him for three years."},
+{th:"<span class='meta'>หน้าสุดท้าย · เขียนด้วยดินสอ</span>ข้านับรูปในลิ้นชักไม่ถูกแล้ว ทุกครั้งที่นับได้ไม่เท่าเดิม<br><br>ถ้าเจ้าอ่านถึงตรงนี้ ข้าขอไว้อย่างเดียว อย่ารับงานที่หลังตลาดเก่า<br><br>และถ้าวันหนึ่งมีคนติดต่อเจ้ามาโดยที่เจ้าไม่เคยเห็นหน้าเขา ให้ถามเขาว่าเขาชื่ออะไร ถ้าเขาตอบไม่ได้ เจ้าจะรู้เองว่าเขาคือใคร",
+ en:"<span class='meta'>Last page · in pencil</span>I can no longer count the photographs in the drawer. The number is different every time.<br><br>If you have read this far, I ask one thing. Do not take the job behind the old market.<br><br>And if someone contacts you whose face you have never seen — ask him his name. If he cannot answer, you will know who he is."}
+];
+
+var BOOK=[{n:"1",th:"ผู้ล่วงลับ · วิญญาณเร่ร่อน",en:"The dead · wandering spirits"},
+          {n:"3",th:"พระรัตนตรัย",en:"The Triple Gem"},
+          {n:"5",th:"ครูบาอาจารย์",en:"Teachers and masters"},
+          {n:"9",th:"เทวดา · เจ้าที่ · พระภูมิ",en:"Deities · guardians of the land"}];
+
+var RITUAL={
+ th:{open:["ธูปติดไฟพร้อมกันทุกดอก","ควันตั้งลำตรงขึ้นฟ้า ไม่แกว่ง","เสียงจิ้งหรีดเงียบลงพร้อมกันทั้งซอย"],
+  perfect:["มีลมเย็นพัดผ่านหลังคาศาลหนึ่งครั้ง","ธูปไหม้เรียบเสมอกันทุกดอก","เถ้าธูปหักลงในกระถางพร้อมกัน"],
+  partial:["ควันชะงักกลางอากาศแล้วค่อยไปต่อ","มีบางอย่างขยับอยู่หลังบานประตูศาล","ธูปดอกหนึ่งดับก่อนดอกอื่น"],
+  wrong:["ควันบิดเป็นเกลียวผิดทาง","เงาที่พื้นมีมากกว่าจำนวนคนตรงนี้","อะไรบางอย่างตอบรับ แต่เสียงไม่เหมือนที่ควรจะเป็น"],
+  void:["ควันไหลย้อนลงมาทางคุณ","ไฟที่ปลายธูปเปลี่ยนเป็นสีเขียวจาง ๆ","ประตูศาลปิดเองทั้งที่ไม่มีลม"]},
+ en:{open:["Every stick catches at once.","The smoke climbs straight up without wavering.","The crickets stop, the whole lane at the same moment."],
+  perfect:["A cold draught crosses the shrine roof, once.","The sticks burn down perfectly level.","The ash breaks into the burner together."],
+  partial:["The smoke stalls in mid-air, then continues.","Something shifts behind the shrine door.","One stick goes out before the others."],
+  wrong:["The smoke twists the wrong way.","There are more shadows on the ground than people standing here.","Something answers. The voice is not the one that should be here."],
+  void:["The smoke flows back down, toward you.","The embers turn a faint green.","The shrine door closes itself. There is no wind."]}
+};
+
+var T={
+ mark:{th:"แก้บน",en:"Kae Bon"},money:{th:"เงิน",en:"Cash"},job:{th:"คืน",en:"Night"},clock:{th:"เวลา",en:"Time"},
+ bookbtn:{th:"สมุด",en:"NOTEBOOK"},
+ t_eyebrow:{th:"เดโม่ v2 · สามคืน · ประมาณ 15 นาที",en:"Demo v2 · three nights · about 15 minutes"},
+ t_title:{th:"แก้บน",en:"The Vow Collector"},t_sub:{th:"THE VOW COLLECTOR",en:"แก้บน"},
+ t_tag:{th:"คุณรับจ้างไปแก้บนแทนคนอื่น คนที่บนไว้แล้วไม่กล้ามาเอง ไม่มีเวลา หรือตายไปแล้ว ทำให้ครบทุกตัวอักษร ไม่งั้นหนี้จะย้ายมาที่คุณ",
+   en:"You are paid to fulfil other people's vows — vows made by those too afraid to return, too far away, or already dead. Do it exactly, or the debt moves to you."},
+ t_start:{th:"เปิดสมุดที่เขาให้มา",en:"Open the notebook he gave you"},
+ t_note:{th:"<strong>เป้าหมาย</strong> หาเงินให้ได้ 3,000 บาทภายในสามคืน · <strong>เวลา</strong> ออกจากบ้านตีสอง ไก่ขันตีห้า พิธีที่ยังไม่จบถือว่าโมฆะ · <strong>กฎของนายหน้า</strong> ถ่ายรูปพิธีส่งมาทุกครั้ง ไม่งั้นไม่จ่ายเงิน",
+   en:"<strong>Goal</strong> earn 3,000 baht across three nights · <strong>Time</strong> you leave at 2 a.m., the cockerel calls at 5, and an unfinished rite is a void one · <strong>The broker's rule</strong> photograph every rite, or you are not paid."},
+ d_eyebrow:{th:"สมุดของรุ่นพี่",en:"Your predecessor's notebook"},
+ d_head:{th:"มีคนทำงานนี้ก่อนคุณ",en:"Someone did this work before you"},
+ d_lede:{th:"นายหน้าส่งสมุดเล่มนี้มาพร้อมงานแรก บอกแค่ว่า จดของเขาละเอียดดี ใช้ต่อได้เลย",
+   en:"The broker sent this along with your first job. All he said was: his notes are thorough, just use them."},
+ d_next:{th:"อ่านใบสั่งงาน",en:"Read the order slip"},
+ b_eyebrow:{th:"ใบสั่งงาน",en:"The order slip"},b_head:{th:"อ่านให้ครบทุกตัวอักษร",en:"Read every letter of it"},
+ b_lede:{th:"ใบสั่งไม่เคยบอกคำตอบตรง ๆ และบางใบก็ไม่ได้บอกความจริงทั้งหมด",
+   en:"The slip never gives you the answer — and some slips do not give you the whole truth."},
+ b_next:{th:"ไปร้านสังฆภัณฑ์",en:"Go to the supply shop"},
+ b_budget:{th:"งบที่ลูกค้าให้มา",en:"Budget provided"},b_fee:{th:"ค่าจ้างเมื่อสำเร็จ",en:"Fee on completion"},
+ s_eyebrow:{th:"ร้านสังฆภัณฑ์ · เจ้าของร้านไม่ถามอะไรทั้งนั้น",en:"Supply shop · the owner asks no questions"},
+ s_head:{th:"ซื้อของเซ่น",en:"Buy the offerings"},
+ s_lede:{th:"ของแพงไม่ได้แปลว่าถูกต้อง ซื้อเกินงบไม่ได้ และของที่ท่านรังเกียจแม้ชิ้นเดียวทำให้พิธีเป็นโมฆะทั้งหมด",
+   en:"Expensive is not the same as correct. You cannot exceed the budget, and one offensive item voids the entire rite."},
+ s_back:{th:"อ่านใบสั่งอีกครั้ง",en:"Read the slip again"},s_next:{th:"ออกเดินทางไปศาล",en:"Set out for the shrine"},
+ s_spent:{th:"ใช้ไป",en:"Spent"},s_left:{th:"เหลือ",en:"Left"},s_over:{th:"เกินงบ",en:"Over budget"},
+ s_none:{th:"ยังไม่ได้เลือกของเซ่นสักชิ้น",en:"You have not chosen a single offering."},
+ a_eyebrow:{th:"หน้าศาล",en:"At the shrine"},a_head:{th:"ส่องให้ทั่วก่อน แล้วค่อยจุด",en:"Search first. Light second."},
+ a_lede:{th:"ทุกอย่างที่ทำกินเวลา ไก่ขันตีห้า และธูปที่ยังไหม้ไม่หมดตอนนั้นถือว่าโมฆะ",
+   en:"Everything you do costs time. The cockerel calls at five, and incense still burning then counts for nothing."},
+ a_clue:{th:"ตรวจศาล",en:"Search the shrine"},a_tray:{th:"โต๊ะเซ่น",en:"Offering tray"},a_stick:{th:"จำนวนธูป",en:"Incense count"},
+ a_empty:{th:"ยังไม่ได้วางของ",en:"Nothing placed yet"},
+ a_shop:{th:"กลับไปซื้อของใหม่ (45 นาที)",en:"Return to the shop (45 min)"},
+ a_go:{th:"จุดธูป เริ่มพิธี (30 นาที)",en:"Light it. Begin. (30 min)"},
+ a_err:{th:"ยังไม่ได้เลือกจำนวนธูป",en:"You have not chosen an incense count."},
+ a_late:{th:"เวลาไม่พอแล้ว ทำอย่างอื่นไม่ทันก่อนตีห้า",en:"Not enough time left before five."},
+ cm_eyebrow:{th:"กฎของนายหน้า",en:"The broker's rule"},cm_head:{th:"ถ่ายรูปส่งมาหนึ่งใบ",en:"One photograph, sent to him"},
+ cm_text:{th:"เขาไม่เคยบอกว่าจะเอารูปไปทำอะไร บอกแค่ว่าไม่มีรูปก็ไม่มีเงิน คุณยกกล้องขึ้น เล็งไปที่ศาล แล้วกดชัตเตอร์โดยไม่มองผ่านช่องมอง",
+   en:"He never says what he does with them. Only that no photograph means no payment. You raise the camera, aim at the shrine, and press the shutter without looking through the viewfinder."},
+ cm_go:{th:"กดชัตเตอร์",en:"Press the shutter"},
+ rm_eyebrow:{th:"ห้องเช่าของคุณ · เกือบหกโมงเช้า",en:"Your rented room · nearly six in the morning"},
+ rm_head:{th:"รูปที่ถ่ายมาคืนนี้",en:"Tonight's photograph"},
+ rm_read:{th:"มีกระดาษแผ่นหนึ่งสอดอยู่ใต้ประตู",en:"A sheet of paper has been pushed under your door."},
+ rm_letter:{th:"หยิบขึ้นมาอ่าน",en:"Pick it up and read"},
+ rp_eyebrow:{th:"จดหมายใต้ประตู",en:"The letter under the door"},rp_head:{th:"ท่านตอบ",en:"An answer"},
+ rp_from:{th:"ไม่มีชื่อผู้ส่ง",en:"NO SENDER"},rp_next:{th:"จดลงสมุด",en:"Write it in the notebook"},
+ v_earn:{th:"ค่าจ้างคืนนี้",en:"Fee tonight"},v_total:{th:"เงินสะสม",en:"Total cash"},v_left:{th:"เหลืออีก",en:"Still needed"},
+ w_eyebrow:{th:"สมุดของคุณเอง",en:"Your own notebook"},w_head:{th:"คืนนี้คุณได้เรียนรู้อะไร",en:"What did you learn tonight?"},
+ w_lede:{th:"เลือกหนึ่งข้อ มันจะถูกจดลงสมุดและกลายเป็นคู่มือของคุณในคืนถัดไป สมุดไม่รู้หรอกว่าคุณสรุปถูกหรือผิด",
+   en:"Choose one. It goes into the notebook and becomes your handbook for the next night. The notebook does not know whether you concluded correctly."},
+ dr_eyebrow:{th:"ลิ้นชักโต๊ะ",en:"The desk drawer"},dr_head:{th:"รูปเก่าไม่ได้หายไปไหน",en:"The old photographs are still here"},
+ dr_text:{th:"คุณเก็บทุกใบไว้ตามที่นายหน้าสั่ง คืนนี้คุณเปิดลิ้นชักออกมาดูอีกครั้ง",
+   en:"You keep every one of them, as the broker instructed. Tonight you open the drawer and look again."},
+ dr_next:{th:"ปิดลิ้นชัก",en:"Close the drawer"},
+ c_eyebrow:{th:"งานสุดท้าย · ก่อนจุดธูป",en:"The last job · before you light it"},
+ c_head:{th:"ใบสั่งเว้นช่องชื่อไว้",en:"The slip left the name blank"},
+ c_text:{th:"ทุกใบมีชื่อคนที่รับผิดชอบหนี้ ใบนี้ไม่มี คุณต้องเขียนเอง และไม่ว่าจะเขียนอะไรลงไป ท่านจะอ่านมัน",
+   en:"Every slip names who carries the debt. This one does not. You must write it yourself — and whatever you write, it will be read."},
+ c_a:{th:"เขียนชื่อตัวเอง",en:"Write your own name"},c_b:{th:"เว้นว่างไว้อย่างนั้น",en:"Leave it blank"},
+ c_c:{th:"เขียนชื่อนายหน้า",en:"Write the broker's name"},
+ e_eyebrow:{th:"จบเดโม่",en:"End of demo"},e_again:{th:"เล่นอีกครั้ง",en:"Play again"},
+ h_eyebrow:{th:"สมุด",en:"Notebook"},h_head:{th:"สมุดของคุณ",en:"Your notebook"},
+ h_t1:{th:"กฎธูป · ลายมือรุ่นพี่",en:"Incense rules · his handwriting"},
+ h_t2:{th:"ที่คุณจดเอง",en:"What you wrote yourself"},
+ h_t3:{th:"บันทึกของรุ่นพี่",en:"His diary"},
+ h_none:{th:"ยังไม่ได้จดอะไรลงไป",en:"Nothing written yet."},
+ h_back:{th:"ปิดสมุด",en:"Close the notebook"},
+ dawn:{th:"ไก่ขัน",en:"The cockerel"},
+ dawn_text:{th:"ฟ้าเริ่มสว่างตรงปลายซอย ธูปยังไหม้ไม่หมด พิธีที่ค้างอยู่ตอนไก่ขันถือว่าโมฆะทั้งหมด และหนี้ทั้งก้อนตกมาที่คนที่ยืนอยู่ตรงนั้น",
+   en:"The sky goes pale at the end of the lane. The incense has not finished. A rite left hanging at dawn is void entirely, and the whole debt falls to whoever is standing there."}
+};
+function t(k){return T[k][L]}
+
+/* ================= STATE ================= */
+var S;
+function reset(){S={night:0,money:0,debt:0,cart:[],incense:0,clock:120,clues:[],photos:[],notes:[],choice:null,grade:null,fromScene:"title"};}
+reset();
+
+var DAY_END=300; /* 05:00 = 300 minutes past midnight */
+function clockStr(){var h=Math.floor(S.clock/60)%24,m=S.clock%60;return (h<10?"0":"")+h+":"+(m<10?"0":"")+m}
+function timeLeft(){return DAY_END-S.clock}
+
+function paintTop(){
+ $("mark").innerHTML=t("mark")+"<small>THE VOW COLLECTOR · DEMO v2</small>";
+ var tl=timeLeft();
+ $("m-clock").innerHTML=t("clock")+" <b>"+clockStr()+"</b>";
+ $("m-clock").className=tl<=45?"crit":(tl<=90?"late":"");
+ $("m-money").innerHTML=t("money")+" <b>"+money(S.money)+"</b>";
+ $("m-job").innerHTML=t("job")+" <b>"+Math.min(S.night+1,3)+"/3</b>";
+ $("btn-book").textContent=t("bookbtn");
+ $("lang").textContent=L==="th"?"EN":"TH";
+}
+function show(id){var a=document.querySelectorAll(".scene");for(var i=0;i<a.length;i++)a[i].classList.remove("on");$(id).classList.add("on");window.scrollTo({top:0,behavior:"smooth"});}
+function spendTime(m){S.clock+=m;paintTop();}
+
+/* ================= PHOTO ================= */
+function figure(x,scale,facing,op){
+ var s=scale,y=150;
+ var head=facing==="front"
+  ? '<circle cx="'+x+'" cy="'+(y-46*s)+'" r="'+(9*s)+'" fill="#050706"/>'+
+    '<circle cx="'+(x-3.4*s)+'" cy="'+(y-47*s)+'" r="'+(1.5*s)+'" fill="#c9c2ae" opacity=".55"/>'+
+    '<circle cx="'+(x+3.4*s)+'" cy="'+(y-47*s)+'" r="'+(1.5*s)+'" fill="#c9c2ae" opacity=".55"/>'
+  : '<circle cx="'+x+'" cy="'+(y-46*s)+'" r="'+(9*s)+'" fill="#050706"/>';
+ return '<g opacity="'+op+'">'+head+
+  '<path d="M'+(x-11*s)+' '+y+' L'+(x-8*s)+' '+(y-37*s)+' Q'+x+' '+(y-42*s)+' '+(x+8*s)+' '+(y-37*s)+' L'+(x+11*s)+' '+y+' Z" fill="#050706"/></g>';
+}
+function hand(){
+ return '<g opacity=".92"><path d="M196 168 q6 -13 15 -11 q2 -8 7 -6 q3 -7 8 -4 q4 -6 8 -1 l4 12 q3 12 -6 16 l-24 6 z" fill="#050706"/></g>';
+}
+function photoSVG(kind,extra){
+ var fig="";
+ if(kind==="partial")fig=hand();
+ if(kind==="wrong")fig=figure(238,1.55,"back",".93");
+ if(kind==="void")fig=figure(238,1.6,"front",".95");
+ var ex="";
+ if(extra)ex=figure(64,1.15,"front",".8");
+ return '<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="photograph">'+
+ '<defs><filter id="pg"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/>'+
+ '<feColorMatrix type="saturate" values="0"/></filter>'+
+ '<radialGradient id="vg" cx="50%" cy="45%" r="62%"><stop offset="55%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".85"/></radialGradient></defs>'+
+ '<rect width="320" height="200" fill="#0e1210"/>'+
+ '<rect x="120" y="112" width="80" height="60" fill="#161a16"/>'+
+ '<path d="M96 112 L160 78 L224 112 Z" fill="#1b1f19"/>'+
+ '<rect x="146" y="132" width="28" height="40" fill="#000"/>'+
+ '<ellipse cx="160" cy="140" rx="26" ry="14" fill="#ffae5c" opacity=".16"/>'+
+ '<path d="M160 128 q-7 -22 2 -40 q7 -16 1 -30" stroke="#8a978d" stroke-opacity=".33" stroke-width="4" fill="none"/>'+
+ '<rect x="0" y="172" width="320" height="28" fill="#080a09"/>'+
+ fig+ex+
+ '<rect width="320" height="200" fill="url(#vg)"/>'+
+ '<rect width="320" height="200" filter="url(#pg)" opacity=".14"/></svg>';
+}
+var PCAP={perfect:{th:"ไม่มีอะไรผิดปกติ",en:"NOTHING IN FRAME"},
+ partial:{th:"มีมือวางอยู่บนขอบโต๊ะ",en:"A HAND ON THE TABLE EDGE"},
+ wrong:{th:"มีคนยืนอยู่ หันหน้าเข้าศาล",en:"SOMEONE STANDS, FACING THE SHRINE"},
+ void:{th:"มันหันมามองกล้อง",en:"IT IS LOOKING AT THE CAMERA"}};
+
+/* ================= FLOW ================= */
+function paintTitle(){
+ $("t-eyebrow").textContent=t("t_eyebrow");$("t-title").textContent=t("t_title");
+ $("t-sub").textContent=t("t_sub");$("t-tag").textContent=t("t_tag");
+ $("t-start").textContent=t("t_start");$("t-note").innerHTML=t("t_note");
+}
+function paintDiary(){
+ $("d-eyebrow").textContent=t("d_eyebrow");$("d-head").textContent=t("d_head");
+ $("d-lede").textContent=t("d_lede");$("d-body").innerHTML=f(DIARY[S.night],"");
+ $("d-next").textContent=t("d_next");
+}
+function paintBrief(){
+ var j=JOBS[S.night];
+ $("b-eyebrow").textContent=t("b_eyebrow");$("b-head").textContent=t("b_head");$("b-lede").textContent=t("b_lede");
+ $("b-stamp").textContent=f(j,"stamp");$("b-place").textContent=f(j,"place");$("b-where").textContent=f(j,"where");
+ $("b-body").innerHTML=f(j,"body");$("b-sign").textContent=f(j,"sign");
+ $("b-budget").textContent=t("b_budget")+" · "+money(j.budget);
+ $("b-fee").textContent=t("b_fee")+" · "+money(j.fee);
+ $("b-next").textContent=t("b_next");
+}
+function itemById(id){for(var i=0;i<ITEMS.length;i++)if(ITEMS[i].id===id)return ITEMS[i];return null}
+function spent(){var s=0;for(var i=0;i<S.cart.length;i++)s+=itemById(S.cart[i]).price;return s}
+function hasTag(tag){for(var i=0;i<S.cart.length;i++)if(itemById(S.cart[i]).tags.indexOf(tag)>-1)return true;return false}
+
+function paintShop(){
+ var j=JOBS[S.night];
+ $("s-eyebrow").textContent=t("s_eyebrow");$("s-head").textContent=t("s_head");$("s-lede").textContent=t("s_lede");
+ $("s-back").textContent=t("s_back");$("s-next").textContent=t("s_next");
+ var g=$("s-grid");g.innerHTML="";
+ for(var i=0;i<ITEMS.length;i++){(function(it){
+  var b=document.createElement("button");
+  b.className="card"+(S.cart.indexOf(it.id)>-1?" picked":"");
+  b.innerHTML='<div class="nm">'+f(it,"")+'</div><div class="pr">'+money(it.price)+'</div><div class="hint">'+f(it,"h")+'</div>';
+  b.onclick=function(){
+   var k=S.cart.indexOf(it.id);
+   if(k>-1){S.cart.splice(k,1);$("s-err").textContent=""}
+   else{if(spent()+it.price>j.budget){$("s-err").textContent=t("s_over");return}S.cart.push(it.id);$("s-err").textContent=""}
+   paintShop();};
+  g.appendChild(b)})(ITEMS[i]);}
+ var sp=spent();
+ $("s-budget").textContent=t("s_spent")+" "+money(sp)+" / "+money(j.budget)+"  ·  "+t("s_left")+" "+money(j.budget-sp);
+ $("s-budget").className="budget"+(sp>j.budget?" over":"");
+}
+function paintAltar(){
+ var j=JOBS[S.night];
+ $("a-eyebrow").textContent=t("a_eyebrow");$("a-head").textContent=t("a_head");$("a-lede").textContent=t("a_lede");
+ $("a-clue-l").textContent=t("a_clue");$("a-tray-l").textContent=t("a_tray");$("a-stick-l").textContent=t("a_stick");
+ $("a-shop").textContent=t("a_shop");$("a-go").textContent=t("a_go");$("a-err").textContent="";
+ var c=$("a-clues");c.innerHTML="";
+ for(var i=0;i<j.clues.length;i++){(function(cl,idx){
+  var b=document.createElement("button");
+  var done=S.clues.indexOf(S.night+"-"+idx)>-1;
+  b.className="clue"+(done?" done":"");
+  b.innerHTML=done?f(cl,"r")+'<span class="cost">'+(L==="th"?"ตรวจแล้ว":"searched")+'</span>'
+                  :f(cl,"")+'<span class="cost">15 '+(L==="th"?"นาที":"min")+'</span>';
+  if(!done)b.onclick=function(){
+   if(timeLeft()<15+30){$("a-err").textContent=t("a_late");return}
+   S.clues.push(S.night+"-"+idx);spendTime(15);paintAltar();};
+  c.appendChild(b)})(j.clues[i],i);}
+ var tr=$("a-tray");tr.innerHTML="";
+ if(!S.cart.length){var e=document.createElement("span");e.className="empty";e.textContent=t("a_empty");tr.appendChild(e)}
+ else for(var k=0;k<S.cart.length;k++){var ch=document.createElement("span");ch.className="chip";ch.textContent=f(itemById(S.cart[k]),"");tr.appendChild(ch)}
+ var st=$("a-sticks");st.innerHTML="";
+ [1,3,5,9].forEach(function(n){
+  var b=document.createElement("button");
+  b.className="stick"+(S.incense===n?" on":"");b.textContent=n;
+  b.setAttribute("aria-label",t("a_stick")+" "+n);
+  b.onclick=function(){S.incense=n;$("a-err").textContent="";paintAltar()};
+  st.appendChild(b)});
+ $("a-shop").disabled=timeLeft()<45+30;
+}
+function judge(){
+ var j=JOBS[S.night];
+ if(timeLeft()<30)return{g:"void",why:{th:"เวลาหมด",en:"time ran out"},dawn:true};
+ for(var i=0;i<j.forbid.length;i++)if(hasTag(j.forbid[i].tag))return{g:"void",why:j.forbid[i]};
+ if(S.incense!==j.incense)return{g:"wrong",why:null};
+ for(var k=0;k<j.require.length;k++)if(!hasTag(j.require[k].tag))return{g:"partial",why:j.require[k]};
+ return{g:"perfect",why:null};
+}
+var timers=[];
+function clearTimers(){for(var i=0;i<timers.length;i++)clearTimeout(timers[i]);timers=[]}
+function runRitual(res){
+ var bn=$("r-burner");bn.innerHTML='<div class="pot"></div>';
+ var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+ var n=S.incense,spread=n===1?0:46;
+ for(var i=0;i<n;i++){
+  var st=document.createElement("div");st.className="incense";
+  var off=n===1?0:(-spread/2+(spread/(n-1))*i);
+  st.style.height=(96+Math.round(Math.random()*12))+"px";
+  st.style.left="calc(50% + "+Math.round(off)+"px)";
+  st.style.transform="rotate("+(off*0.09).toFixed(2)+"deg)";
+  st.innerHTML='<div class="tip"></div>';bn.appendChild(st);}
+ if(!reduce){var bad=(res.g==="void");
+  for(var p=0;p<9;p++){var pf=document.createElement("div");pf.className="puff";
+   pf.style.setProperty("--dx",(Math.round(Math.random()*40)-20)+"px");
+   pf.style.left="calc(50% + "+(Math.round(Math.random()*46)-23)+"px)";
+   pf.style.animation=(bad?"sink ":"rise ")+(4.4+Math.random()*2).toFixed(1)+"s linear "+(p*0.55).toFixed(2)+"s infinite";
+   bn.appendChild(pf);}}
+ var lines=RITUAL[L].open.concat(RITUAL[L][res.g]);
+ if(res.dawn)lines=[RITUAL[L].open[0],t("dawn_text")];
+ var cls=res.g==="perfect"?"good":(res.g==="void"?"bad":"warn");
+ var el=$("r-line");el.textContent="";el.className="ritual-line";
+ clearTimers();var delay=500;
+ for(var q=0;q<lines.length;q++){(function(txt,idx){
+  timers.push(setTimeout(function(){el.textContent=txt;el.className="ritual-line"+(idx>=(res.dawn?1:3)?" "+cls:"")},delay))})(lines[q],q);
+  delay+=q<2?1900:2300;}
+ timers.push(setTimeout(function(){finishNight(res)},delay+300));
+}
+var pendingRes=null;
+function finishNight(res){
+ var j=JOBS[S.night];
+ var pay=res.g==="perfect"?j.fee:(res.g==="partial"?Math.round(j.fee/2):0);
+ var add=res.g==="perfect"?0:(res.g==="partial"?1:(res.g==="wrong"?2:3));
+ S.money+=pay;S.debt+=add;S.grade=res.g;pendingRes={res:res,pay:pay};
+ S.photos.push({g:res.g,night:S.night});
+ paintTop();
+ $("cm-eyebrow").textContent=t("cm_eyebrow");$("cm-head").textContent=t("cm_head");
+ $("cm-text").textContent=t("cm_text");$("cm-go").textContent=t("cm_go");
+ show("camera");
+}
+function paintRoom(){
+ $("rm-eyebrow").textContent=t("rm_eyebrow");$("rm-head").textContent=t("rm_head");
+ $("rm-read").textContent=t("rm_read");$("rm-letter").textContent=t("rm_letter");
+ var last=S.photos[S.photos.length-1];
+ $("rm-photo").innerHTML='<div class="photo">'+photoSVG(last.g,false)+
+  '<span class="cap">'+f(PCAP[last.g],"")+'</span></div>';
+}
+function paintReply(){
+ var j=JOBS[S.night],g=S.grade;
+ $("rp-eyebrow").textContent=t("rp_eyebrow");$("rp-head").textContent=t("rp_head");
+ $("rp-from").textContent=t("rp_from");
+ $("rp-body").textContent=j.reply[g+"_"+L];
+ $("rp-ledger").innerHTML="<span>"+t("v_earn")+"<b>"+money(pendingRes.pay)+"</b></span>"+
+  "<span>"+t("v_total")+"<b>"+money(S.money)+"</b></span>"+
+  "<span>"+t("v_left")+"<b>"+money(Math.max(0,3000-S.money))+"</b></span>";
+ $("rp-next").textContent=t("rp_next");
+}
+function paintWrite(){
+ var j=JOBS[S.night];
+ $("w-eyebrow").textContent=t("w_eyebrow");$("w-head").textContent=t("w_head");$("w-lede").textContent=t("w_lede");
+ var box=$("w-opts");box.innerHTML="";
+ for(var i=0;i<j.write.length;i++){(function(o){
+  var b=document.createElement("button");b.className="opt";b.textContent=f(o,"");
+  b.onclick=function(){S.notes.push(f(o,"note"));nextNight()};
+  box.appendChild(b)})(j.write[i]);}
+}
+function paintDrawer(){
+ $("dr-eyebrow").textContent=t("dr_eyebrow");$("dr-head").textContent=t("dr_head");
+ $("dr-text").textContent=t("dr_text");$("dr-next").textContent=t("dr_next");
+ var box=$("dr-shots");box.innerHTML="";
+ for(var i=0;i<S.photos.length;i++){
+  var p=S.photos[i];
+  var haunt=(S.debt>=4&&i===0&&p.g==="perfect");
+  var cap=haunt?(L==="th"?"ใบนี้เคยไม่มีอะไร":"THIS ONE USED TO BE EMPTY"):f(PCAP[p.g],"");
+  var d=document.createElement("div");
+  d.className="shot"+(i===S.photos.length-1?" new":"");
+  d.innerHTML=photoSVG(p.g,haunt)+'<span class="cap">'+(L==="th"?"คืนที่ ":"NIGHT ")+(p.night+1)+" · "+cap+'</span>';
+  box.appendChild(d);}
+}
+function nextNight(){
+ if(S.night>=2){showEnding(S.choice||"blank");return}
+ S.night+=1;S.cart=[];S.incense=0;S.clock=120;
+ paintTop();paintDrawer();show("drawer");
+}
+function paintChoice(){
+ $("c-eyebrow").textContent=t("c_eyebrow");$("c-head").textContent=t("c_head");$("c-text").textContent=t("c_text");
+ $("c-a").textContent=t("c_a");$("c-b").textContent=t("c_b");$("c-c").textContent=t("c_c");
+}
+var ENDINGS={
+ self:{th:{h:"คุณจำได้แล้ว",p:"ชื่อในช่องนั้นคือชื่อคุณ เพราะคำบนคำนั้นเป็นของคุณมาตั้งแต่อายุสิบเอ็ด คืนที่ตลาดเก่าไฟไหม้และมีเด็กออกมาได้คนเดียว คุณลืมมันไปยี่สิบปี และตลอดยี่สิบปีนั้นมีใครสักคนรออยู่หลังตลาด ไม่โกรธ แค่รอ พอคุณเขียนชื่อลงไป ธูปห้าดอกไหม้จนหมดพร้อมกัน"},
+   en:{h:"You remember now",p:"The name in that blank was yours. The vow was yours, made at eleven, the night the old market burned and one child walked out alive. You forgot for twenty years, and for twenty years someone waited behind that market — not angry, only waiting. When you write your name, the five sticks burn down together."}},
+ blank:{th:{h:"เว้นว่างไว้",p:"ช่องที่ไม่มีชื่อไม่ได้แปลว่าไม่มีใครรับ มันแปลว่าใครก็ได้ คุณเดินกลับบ้านโดยไม่มีอะไรตามมา สามเดือนต่อมามีคนที่คุณไม่รู้จักได้รับใบสั่งงานวางไว้หน้าห้อง พร้อมสมุดเก่าเล่มหนึ่ง และข้อความจากคนที่เขาไม่เคยเห็นหน้า"},
+   en:{h:"Left blank",p:"An empty name does not mean nobody carries it. It means anybody can. You walk home with nothing behind you. Three months later a stranger finds an order slip outside their room, along with an old notebook, and a message from someone whose face they have never seen."}},
+ broker:{th:{h:"ส่งต่อ",p:"คุณเขียนชื่อนายหน้าลงไป แล้วนึกขึ้นได้ว่าคุณไม่เคยรู้ชื่อเขาเลย คุณเขียนสิ่งที่คิดว่าใช่ ธูปดับพร้อมกันทั้งห้าดอก เช้าวันต่อมาไม่มีข้อความเข้ามาอีก ไม่มีงาน ไม่มีเงิน มีแค่สมุดของรุ่นพี่วางอยู่บนโต๊ะ เปิดค้างไว้ที่หน้าสุดท้าย และลายมือในนั้นเป็นลายมือคุณ"},
+   en:{h:"Passed on",p:"You write the broker's name — and realise you never knew it. You write what you assume it is. All five sticks go out at once. No message comes the next morning. No work, no money. Only the old notebook on your desk, open at the last page, in your own handwriting."}}
+};
+function endNote(){
+ var ok=S.money>=3000;
+ if(L==="th")return "<strong>สรุปการเล่นของคุณ</strong> เงินสะสม "+money(S.money)+" บาท "+(ok?"ครบตามเป้า":"ไม่ถึงเป้า 3,000")+
+  " · ระดับหนี้ "+S.debt+"/9 · รูปที่เก็บไว้ "+S.photos.length+" ใบ<br><br>"+
+  "<strong>สิ่งที่เวอร์ชันนี้เพิ่มเข้ามา</strong> เฉลยไม่ได้มาจากเกม แต่มาจากรูปถ่ายและจดหมายของสิ่งที่รับของไป · ใบสั่งคืนที่สองโกหก และมีหลักฐานที่ศาลบอกความจริง · สมุดที่คุณจดเองอาจผิด แล้วมันจะพาคุณพลาดซ้ำในคืนถัดไป";
+ return "<strong>Your run</strong> cash "+money(S.money)+(ok?" — target met":" — short of 3,000")+
+  " · debt "+S.debt+"/9 · photographs kept "+S.photos.length+"<br><br>"+
+  "<strong>What v2 adds</strong> the answer key is not the game talking — it is the photograph and the letter from whatever received the offering · the second slip lies, and the shrine holds the evidence · the notes you write yourself can be wrong, and they will mislead you the following night.";
+}
+function showEnding(kind){
+ var e=ENDINGS[kind][L];
+ $("e-eyebrow").textContent=t("e_eyebrow");$("e-head").textContent=e.h;$("e-text").textContent=e.p;
+ $("e-ledger").innerHTML="<span>"+t("v_total")+"<b>"+money(S.money)+"</b></span>"+
+  "<span>"+(L==="th"?"หนี้ที่รับมา":"Debt carried")+"<b>"+S.debt+"</b></span>"+
+  "<span>"+(L==="th"?"รูปในลิ้นชัก":"Photographs")+"<b>"+S.photos.length+"</b></span>";
+ $("e-note").innerHTML=endNote();$("e-again").textContent=t("e_again");
+ show("ending");
+}
+function paintHandbook(){
+ $("h-eyebrow").textContent=t("h_eyebrow");$("h-head").textContent=t("h_head");
+ $("h-t1").textContent=t("h_t1");$("h-t2").textContent=t("h_t2");$("h-t3").textContent=t("h_t3");
+ $("h-back").textContent=t("h_back");
+ var ul=$("h-list");ul.innerHTML="";
+ for(var i=0;i<BOOK.length;i++){var li=document.createElement("li");
+  li.innerHTML="<span>"+BOOK[i].n+"</span><span>"+f(BOOK[i],"")+"</span>";ul.appendChild(li)}
+ var m=$("h-mine");m.innerHTML="";
+ if(!S.notes.length)m.innerHTML='<div class="mine">'+t("h_none")+'</div>';
+ else for(var k=0;k<S.notes.length;k++){var d=document.createElement("div");d.className="mine";d.textContent=S.notes[k];m.appendChild(d)}
+ var dv=$("h-diary");dv.innerHTML="";
+ for(var q=0;q<=Math.min(S.night,2);q++){var p=document.createElement("p");
+  p.style.marginBottom="10px";p.innerHTML=f(DIARY[q],"");dv.appendChild(p)}
+}
+
+/* ================= WIRING ================= */
+$("t-start").onclick=function(){paintDiary();show("diary")};
+$("d-next").onclick=function(){paintBrief();show("brief")};
+$("b-next").onclick=function(){paintShop();show("shop")};
+$("s-back").onclick=function(){paintBrief();show("brief")};
+$("s-next").onclick=function(){
+ if(!S.cart.length){$("s-err").textContent=t("s_none");return}
+ if(S.night===2&&!S.choice){paintChoice();show("choice");return}
+ spendTime(25);paintAltar();show("altar")};
+$("a-shop").onclick=function(){spendTime(45);paintShop();show("shop")};
+$("a-go").onclick=function(){
+ if(!S.incense){$("a-err").textContent=t("a_err");return}
+ var res=judge();spendTime(30);show("ritual");runRitual(res)};
+$("cm-go").onclick=function(){paintRoom();show("room")};
+$("rm-letter").onclick=function(){paintReply();show("reply")};
+$("rp-next").onclick=function(){paintWrite();show("write")};
+$("dr-next").onclick=function(){paintDiary();show("diary")};
+$("c-a").onclick=function(){S.choice="self";spendTime(25);paintAltar();show("altar")};
+$("c-b").onclick=function(){S.choice="blank";spendTime(25);paintAltar();show("altar")};
+$("c-c").onclick=function(){S.choice="broker";spendTime(25);paintAltar();show("altar")};
+$("e-again").onclick=function(){reset();clearTimers();paintTop();paintTitle();show("title")};
+$("btn-book").onclick=function(){
+ var cur=document.querySelector(".scene.on").id;
+ if(cur==="handbook"){show(S.fromScene);return}
+ S.fromScene=cur;paintHandbook();show("handbook")};
+$("h-back").onclick=function(){show(S.fromScene)};
+$("lang").onclick=function(){
+ L=(L==="th")?"en":"th";document.documentElement.lang=L;paintTop();paintTitle();
+ var on=document.querySelector(".scene.on").id;
+ if(on==="diary")paintDiary();if(on==="brief")paintBrief();if(on==="shop")paintShop();
+ if(on==="altar")paintAltar();if(on==="room")paintRoom();if(on==="reply")paintReply();
+ if(on==="write")paintWrite();if(on==="drawer")paintDrawer();if(on==="choice")paintChoice();
+ if(on==="handbook")paintHandbook();
+ if(on==="camera"){$("cm-eyebrow").textContent=t("cm_eyebrow");$("cm-head").textContent=t("cm_head");
+  $("cm-text").textContent=t("cm_text");$("cm-go").textContent=t("cm_go")}};
+paintTop();paintTitle();
+</script>
+</body>
+</html>
